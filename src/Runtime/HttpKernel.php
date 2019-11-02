@@ -53,7 +53,6 @@ class HttpKernel
 
             $response = (new Pipeline)->send($request)
                 ->through([
-                    new EnsureOnNakedDomain,
                     new RedirectStaticAssets,
                     new EnsureVanityUrlIsNotIndexed,
                 ])->then(function ($request) use ($kernel) {

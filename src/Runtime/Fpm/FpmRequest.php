@@ -2,6 +2,7 @@
 
 namespace Laravel\Vapor\Runtime\Fpm;
 
+use Illuminate\Support\Arr;
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
 
 class FpmRequest implements ProvidesRequestData
@@ -122,7 +123,9 @@ class FpmRequest implements ProvidesRequestData
 
         return http_build_query(
             collect($event['multiValueQueryStringParameters'] ?? [])
-                ->mapWithKeys(function ($values, $key) {
+                ->mapWithKeys(function ($values, $key) use ($event) {
+                    $key = ! isset($event['requestContext']['elb']) ? $key : urldecode($key);
+
                     return count($values) === 1
                         ? [$key => $values[0]]
                         : [(substr($key, -2) == '[]' ? substr($key, 0, -2) : $key) => $values];
@@ -155,7 +158,7 @@ class FpmRequest implements ProvidesRequestData
         return array_change_key_case(
             collect($event['multiValueHeaders'] ?? [])
                 ->mapWithKeys(function ($headers, $name) {
-                    return [$name => $headers[0]];
+                    return [$name => Arr::last($headers)];
                 })->all(), CASE_LOWER
         );
     }

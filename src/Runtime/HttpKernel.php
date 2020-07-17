@@ -2,15 +2,16 @@
 
 namespace Laravel\Vapor\Runtime;
 
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pipeline\Pipeline;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
+use Laravel\Vapor\Runtime\Http\Middleware\EnsureBinaryEncoding;
 use Laravel\Vapor\Runtime\Http\Middleware\EnsureOnNakedDomain;
-use Laravel\Vapor\Runtime\Http\Middleware\RedirectStaticAssets;
 use Laravel\Vapor\Runtime\Http\Middleware\EnsureVanityUrlIsNotIndexed;
+use Laravel\Vapor\Runtime\Http\Middleware\RedirectStaticAssets;
 
 class HttpKernel
 {
@@ -56,6 +57,7 @@ class HttpKernel
                     new EnsureOnNakedDomain,
                     new RedirectStaticAssets,
                     new EnsureVanityUrlIsNotIndexed,
+                    new EnsureBinaryEncoding(),
                 ])->then(function ($request) use ($kernel) {
                     return $kernel->handle($request);
                 });

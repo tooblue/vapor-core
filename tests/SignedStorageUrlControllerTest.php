@@ -23,8 +23,7 @@ class SignedStorageUrlControllerTest extends TestCase
             return true;
         });
 
-        $response = $this->json('POST', '/vapor/signed-storage-url?content_type=text/plain');
-
+        $response = $this->withoutExceptionHandling()->json('POST', '/vapor/signed-storage-url?content_type=text/plain');
 
         $response->assertStatus(201);
         $this->assertTrue(is_string($response->original['uuid']));
@@ -40,6 +39,18 @@ class SignedStorageUrlControllerTest extends TestCase
         //     'body' => file_get_contents(__FILE__),
         //     'headers' => $headers,
         // ]));
+    }
+
+    public function test_aws_url_environmental_variable_is_used()
+    {
+        $_ENV['AWS_URL'] = 'http://custom-url';
+        Gate::define('uploadFiles', function ($user = null, $bucket) {
+            return true;
+        });
+
+        $response = $this->withoutExceptionHandling()->json('POST', '/vapor/signed-storage-url?content_type=text/plain');
+        $response->assertStatus(201);
+        $this->assertStringContainsString('laravel-s3-test-1.custom-url', $response->original['url']);
     }
 
 

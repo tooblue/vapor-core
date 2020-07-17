@@ -3,11 +3,11 @@
 namespace Laravel\Vapor\Http\Controllers;
 
 use Aws\S3\S3Client;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Laravel\Vapor\Contracts\SignedStorageUrlController as SignedStorageUrlControllerContract;
 
 class SignedStorageUrlController extends Controller implements SignedStorageUrlControllerContract
@@ -128,6 +128,11 @@ class SignedStorageUrlController extends Controller implements SignedStorageUrlC
                 'secret' => $_ENV['AWS_SECRET_ACCESS_KEY'] ?? null,
                 'token' => $_ENV['AWS_SESSION_TOKEN'] ?? null,
             ]);
+
+            if (array_key_exists('AWS_URL', $_ENV) && ! is_null($_ENV['AWS_URL'])) {
+                $config['url'] = $_ENV['AWS_URL'];
+                $config['endpoint'] = $_ENV['AWS_URL'];
+            }
         }
 
         return S3Client::factory($config);

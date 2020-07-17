@@ -2,15 +2,15 @@
 
 namespace Laravel\Vapor;
 
-use InvalidArgumentException;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Vapor\Queue\VaporConnector;
+use InvalidArgumentException;
 use Laravel\Vapor\Console\Commands\VaporWorkCommand;
-use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Laravel\Vapor\Http\Controllers\SignedStorageUrlController;
+use Laravel\Vapor\Queue\VaporConnector;
 
 class VaporServiceProvider extends ServiceProvider
 {
@@ -64,14 +64,43 @@ class VaporServiceProvider extends ServiceProvider
             SignedStorageUrlController::class
         );
 
+        $this->configure();
+        $this->offerPublishing();
         $this->ensureAssetPathsAreConfigured();
         $this->ensureRedisIsConfigured();
         $this->ensureDynamoDbIsConfigured();
         $this->ensureQueueIsConfigured();
         $this->ensureSqsIsConfigured();
         $this->ensureMixIsConfigured();
+        $this->configureTrustedProxy();
 
         $this->registerCommands();
+    }
+
+    /**
+     * Setup the configuration for Horizon.
+     *
+     * @return void
+     */
+    protected function configure()
+    {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/vapor.php', 'vapor'
+        );
+    }
+
+    /**
+     * Setup the resource publishing groups for Horizon.
+     *
+     * @return void
+     */
+    protected function offerPublishing()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/vapor.php' => config_path('vapor.php'),
+            ], 'vapor-config');
+        }
     }
 
     /**
@@ -87,9 +116,21 @@ class VaporServiceProvider extends ServiceProvider
     }
 
     /**
+     * Configure trusted proxy.
+     *
+     * @return void
+     */
+    private function configureTrustedProxy()
+    {
+        Config::set('trustedproxy.proxies', ['0.0.0.0/0', '2000:0:0:0:0:0:0:0/3']);
+    }
+
+    /**
      * Register the Vapor console commands.
      *
      * @return void
+     *
+     * @throws \InvalidArgumentException
      */
     protected function registerCommands()
     {
@@ -97,7 +138,7 @@ class VaporServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app[ConsoleKernel::class]->command('vapor:handle {payload}',function () {
+        $this->app[ConsoleKernel::class]->command('vapor:handle {payload}', function () {
             throw new InvalidArgumentException(
                 'Unknown event type. Please create a vapor:handle command to handle custom events.'
             );

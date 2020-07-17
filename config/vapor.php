@@ -27,5 +27,16 @@ return [
     */
 
     'redirect_robots_txt' => true,
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Storage directory
+    |--------------------------------------------------------------------------
+    |
+    | The storage path for the execution environment.
+    |
+    */
+
+    'storage_path' => env('VAPOR_STORAGE_PATH', '/tmp/storage'),
 
 ];

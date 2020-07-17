@@ -9,7 +9,7 @@ class StorageDirectories
      *
      * @var string
      */
-    public const PATH = '/tmp/storage';
+    public const PATH = config('vapor.storage_path');
 
     /**
      * Ensure the necessary storage directories exist.
